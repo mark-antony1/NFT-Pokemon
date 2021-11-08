@@ -68,8 +68,10 @@ contract MyEpicGame is ERC721 {
 	// A mapping from an the NFTs tokenId => address. I can retrieve an owner based on a pokemon ID.
   mapping(uint256 => address) public pokemonToOwner;
 
-	mapping(address => uint256) public ownerToPokemon;
+	mapping(address => uint256) public ownerToPokemonId;
 
+	event AttackComplete(uint newBossHp, uint newPlayerHp);
+	event CharacterNFTMinted(address sender, uint256 tokenId, uint256 characterIndex);
 
 	// A mapping from an the address => list of NFT tokenIds. I can retrieve which person owns which pokemon.
   mapping(address => uint256[]) public ownerToPokemons;
@@ -154,10 +156,11 @@ contract MyEpicGame is ERC721 {
     // Keep an easy way to see who owns what NFT.
     pokemonToOwner[newItemId] = msg.sender;
 
-		ownerToPokemon[msg.sender] = newItemId;
+		ownerToPokemonId[msg.sender] = newItemId;
 
     // Increment the tokenId for the next person that uses it.
     _tokenIds.increment();
+		emit CharacterNFTMinted(msg.sender, newItemId, _characterIndex);
 	}
 
 	function tokenURI(uint256 _tokenId) public view override returns (string memory) {
@@ -195,7 +198,7 @@ contract MyEpicGame is ERC721 {
 	}
 
 	function attackBoss() public {
-		uint256 pokemonId = ownerToPokemon[msg.sender];
+		uint256 pokemonId = ownerToPokemonId[msg.sender];
 		CharacterAttributes storage pokemon = pokemonAttributes[pokemonId];
 		console.log("\nPlayer w/ character %s about to attack. Has %s HP and %s AD", pokemon.name, pokemon.hp, pokemon.attackDamage);
 		console.log("Boss %s has %s HP and %s AD", bigBoss.name, bigBoss.hp, bigBoss.attackDamage);
@@ -216,5 +219,26 @@ contract MyEpicGame is ERC721 {
 
 		console.log("Player attacked boss. New boss hp: %s", bigBoss.hp);
   	console.log("Boss attacked player's pokemon. New pokemon hp: %s\n", pokemon.hp);
+		emit AttackComplete(bigBoss.hp, pokemon.hp);
 	}
+
+	function checkIfUserHasNFT() public view returns (CharacterAttributes memory) {
+		uint256 tokenId = ownerToPokemonId[msg.sender];
+		if (tokenId > 0){
+			return pokemonAttributes[tokenId];
+		} else {
+			CharacterAttributes memory emptyStruct;
+			return emptyStruct;
+		}
+	}
+
+	function getAllDefaultCharacters() public view returns (CharacterAttributes[] memory) {
+		return defaultCharacters;
+	}
+
+	function getBigBoss() public view returns (BigBoss memory) {
+		return bigBoss;
+	}
+
+
 }
