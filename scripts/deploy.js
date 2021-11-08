@@ -1,6 +1,6 @@
 const main = async () => {
   const gameContractFactory = await hre.ethers.getContractFactory('MyEpicGame');
-  const gameContract = await gameContractFactory.deploy(                     
+  const gameContract = await gameContractFactory.deploy(
 		["Pikachu", "Charizard", "Blastoise", "Venusaur"],
 		[
 			"https://img.pokemondb.net/artwork/large/pikachu.jpg", 
@@ -9,34 +9,35 @@ const main = async () => {
 			"https://img.pokemondb.net/artwork/large/venusaur.jpg"
 		],
 		[85, 125, 200, 150],
-		[230, 150, 70, 125],
+		[63, 43, 30, 40],
 		[10, 20, 30, 20],
 		["Thunderbolt", "Flamethrower", "Hydro Pump", "Vine Whip"],
-		[40, 20, 10, 20]                      
-  );
+		[40, 20, 10, 20],
+		{
+			name: "Mewtwo",
+			imageURI: "https://bulbapedia.bulbagarden.net/wiki/File:150Mewtwo.png",
+			hp: 300,
+			attackDamage: 100,
+			defense: 20,
+			moveName: "Psychic",
+			critChance: 10
+		}
+	);
   await gameContract.deployed();
   console.log("Contract deployed to:", gameContract.address);
 
-  
-  let txn;
-  txn = await gameContract.mintCharacterNFT(0);
-  await txn.wait();
-  console.log("Minted NFT #1");
+	let txn;
 
-  txn = await gameContract.mintCharacterNFT(1);
-  await txn.wait();
-  console.log("Minted NFT #2");
+	txn = await gameContract.mintCharacterNFT(2);
+	await txn.wait();
 
-  txn = await gameContract.mintCharacterNFT(2);
-  await txn.wait();
-  console.log("Minted NFT #3");
+	txn = await gameContract.attackBoss();
+	await txn.wait();
 
-  txn = await gameContract.mintCharacterNFT(1);
-  await txn.wait();
-  console.log("Minted NFT #4");
+	txn = await gameContract.attackBoss();
+	await txn.wait();
 
-  console.log("Done deploying and minting!");
-
+	console.log("Done!");
 };
 
 const runMain = async () => {
