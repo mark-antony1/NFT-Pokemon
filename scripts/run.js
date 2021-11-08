@@ -9,10 +9,19 @@ const main = async () => {
 			"https://img.pokemondb.net/artwork/large/venusaur.jpg"
 		],
 		[85, 125, 200, 150],
-		[230, 150, 70, 125],
+		[63, 43, 30, 40],
 		[10, 20, 30, 20],
 		["Thunderbolt", "Flamethrower", "Hydro Pump", "Vine Whip"],
-		[40, 20, 10, 20]
+		[40, 20, 10, 20],
+		{
+			name: "Mewtwo",
+			imageURI: "https://bulbapedia.bulbagarden.net/wiki/File:150Mewtwo.png",
+			hp: 300,
+			attackDamage: 100,
+			defense: 20,
+			moveName: "Psychic",
+			critChance: 10
+		}
 	);
   await gameContract.deployed();
   console.log("Contract deployed to:", gameContract.address);
@@ -21,6 +30,12 @@ const main = async () => {
 	// We only have three characters.
 	// an NFT w/ the character at index 2 of our array.
 	txn = await gameContract.mintCharacterNFT(2);
+	await txn.wait();
+
+	txn = await gameContract.attackBoss();
+	await txn.wait();
+
+	txn = await gameContract.attackBoss();
 	await txn.wait();
 
 	// Get the value of the NFT's URI.

@@ -29,6 +29,29 @@ contract MyEpicGame is ERC721 {
 		uint critChance;
   }
 
+	struct BigBossArguments {
+		string name;
+		string imageURI;
+		uint hp;
+		uint attackDamage;
+		uint defense;
+		string moveName;
+		uint critChance;
+	}
+
+	struct BigBoss {
+		string name;
+		string imageURI;
+		uint hp;
+		uint maxHp;
+		uint attackDamage;
+		uint defense;
+		string moveName;
+		uint critChance;
+	}
+
+	BigBoss public bigBoss;
+
   // The tokenId is the NFTs unique identifier, it's just a number that goes
   // 0, 1, 2, 3, etc.
   using Counters for Counters.Counter;
@@ -40,10 +63,13 @@ contract MyEpicGame is ERC721 {
   CharacterAttributes[] defaultCharacters;
 
 	// We create a mapping from the nft's tokenId => that NFTs attributes.
-  mapping(uint256 => CharacterAttributes) public nftHolderAttributes;
+  mapping(uint256 => CharacterAttributes) public pokemonAttributes;
 
 	// A mapping from an the NFTs tokenId => address. I can retrieve an owner based on a pokemon ID.
   mapping(uint256 => address) public pokemonToOwner;
+
+	mapping(address => uint256) public ownerToPokemon;
+
 
 	// A mapping from an the address => list of NFT tokenIds. I can retrieve which person owns which pokemon.
   mapping(address => uint256[]) public ownerToPokemons;
@@ -57,10 +83,26 @@ contract MyEpicGame is ERC721 {
     uint[] memory characterAttackDmg,
 		uint[] memory characterDefense,
 		string[] memory characterMoveName,
-		uint[] memory characterCritChance
+		uint[] memory characterCritChance,
+		BigBossArguments memory bossData
   )
 		ERC721("Pokemon", "POKEMON")
   {
+		// Initialize the boss. Save it to our global "bigBoss" state variable.
+		bigBoss = BigBoss({
+			name: bossData.name,
+			imageURI: bossData.imageURI,
+			hp: bossData.hp,
+			maxHp: bossData.hp,
+			attackDamage: bossData.attackDamage,
+			defense: bossData.defense,
+			moveName: bossData.moveName,
+			critChance: bossData.critChance
+		});
+
+		console.log("Done initializing boss %s w/ HP %s, img %s", bigBoss.name, bigBoss.hp, bigBoss.imageURI);
+
+
     // Loop through all the characters, and save their values in our contract so
     // we can use them later when we mint our NFTs.
     for(uint i = 0; i < characterNames.length; i += 1) {
@@ -95,7 +137,7 @@ contract MyEpicGame is ERC721 {
 
     // We map the tokenId => their character attributes. More on this in
     // the lesson below.
-    nftHolderAttributes[newItemId] = CharacterAttributes({
+    pokemonAttributes[newItemId] = CharacterAttributes({
       characterIndex: _characterIndex,
       name: defaultCharacters[_characterIndex].name,
       imageURI: defaultCharacters[_characterIndex].imageURI,
@@ -112,12 +154,14 @@ contract MyEpicGame is ERC721 {
     // Keep an easy way to see who owns what NFT.
     pokemonToOwner[newItemId] = msg.sender;
 
+		ownerToPokemon[msg.sender] = newItemId;
+
     // Increment the tokenId for the next person that uses it.
     _tokenIds.increment();
 	}
 
 	function tokenURI(uint256 _tokenId) public view override returns (string memory) {
-		CharacterAttributes memory charAttributes = nftHolderAttributes[_tokenId];
+		CharacterAttributes memory charAttributes = pokemonAttributes[_tokenId];
 
 		string memory strHp = Strings.toString(charAttributes.hp);
 		string memory strMaxHp = Strings.toString(charAttributes.maxHp);
@@ -148,5 +192,29 @@ contract MyEpicGame is ERC721 {
 		);
 		
 		return output;
+	}
+
+	function attackBoss() public {
+		uint256 pokemonId = ownerToPokemon[msg.sender];
+		CharacterAttributes storage pokemon = pokemonAttributes[pokemonId];
+		console.log("\nPlayer w/ character %s about to attack. Has %s HP and %s AD", pokemon.name, pokemon.hp, pokemon.attackDamage);
+		console.log("Boss %s has %s HP and %s AD", bigBoss.name, bigBoss.hp, bigBoss.attackDamage);
+		require (pokemon.hp > 0, "Error: pokemon is out of HP");
+		require (bigBoss.hp > 0, "Error: Mewtwo is out of HP");
+
+		if (bigBoss.hp < pokemon.attackDamage) {
+			bigBoss.hp = 0;
+		} else {
+			bigBoss.hp = bigBoss.hp - pokemon.attackDamage;
+		}
+
+		if (pokemon.hp < bigBoss.attackDamage) {
+			pokemon.hp = 0;
+		} else {
+			pokemon.hp = pokemon.hp - bigBoss.attackDamage;
+		}
+
+		console.log("Player attacked boss. New boss hp: %s", bigBoss.hp);
+  	console.log("Boss attacked player's pokemon. New pokemon hp: %s\n", pokemon.hp);
 	}
 }
