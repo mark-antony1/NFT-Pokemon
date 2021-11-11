@@ -15,7 +15,7 @@ const main = async () => {
 		[40, 20, 10, 20],
 		{
 			name: "Mewtwo",
-			imageURI: "https://bulbapedia.bulbagarden.net/wiki/File:150Mewtwo.png",
+			imageURI: "https://img.pokemondb.net/artwork/large/mewtwo.jpg",
 			hp: 300,
 			attackDamage: 100,
 			defense: 20,
