@@ -29,6 +29,18 @@ contract MyEpicGame is ERC721 {
 		uint critChance;
   }
 
+	struct PokemonNFTAttributes {
+    string name;
+    string imageURI;        
+    uint hp;
+    uint maxHp;
+    uint attackDamage;
+		uint defense;
+		string moveName;
+		uint critChance;
+		uint256 tokenId;
+  }
+
 	struct BigBossArguments {
 		string name;
 		string imageURI;
@@ -68,10 +80,9 @@ contract MyEpicGame is ERC721 {
 	// A mapping from an the NFTs tokenId => address. I can retrieve an owner based on a pokemon ID.
   mapping(uint256 => address) public pokemonToOwner;
 
-	mapping(address => uint256) public ownerToPokemonId;
-
-	event AttackComplete(uint newBossHp, uint newPlayerHp);
+	event AttackComplete(uint newBossHp, uint newPlayerHp, uint256 tokenId);
 	event CharacterNFTMinted(address sender, uint256 tokenId, uint256 characterIndex);
+	event PokemonRevived(uint256 tokenId, uint newPokemonHealth);
 
 	// A mapping from an the address => list of NFT tokenIds. I can retrieve which person owns which pokemon.
   mapping(address => uint256[]) public ownerToPokemons;
@@ -156,7 +167,7 @@ contract MyEpicGame is ERC721 {
     // Keep an easy way to see who owns what NFT.
     pokemonToOwner[newItemId] = msg.sender;
 
-		ownerToPokemonId[msg.sender] = newItemId;
+		ownerToPokemons[msg.sender].push(newItemId);
 
     // Increment the tokenId for the next person that uses it.
     _tokenIds.increment();
@@ -197,9 +208,10 @@ contract MyEpicGame is ERC721 {
 		return output;
 	}
 
-	function attackBoss() public {
-		uint256 pokemonId = ownerToPokemonId[msg.sender];
-		CharacterAttributes storage pokemon = pokemonAttributes[pokemonId];
+	function attackBoss(uint256 _tokenId) public {
+		address owner = pokemonToOwner[_tokenId];
+		require(msg.sender == owner);
+		CharacterAttributes storage pokemon = pokemonAttributes[_tokenId];
 		console.log("\nPlayer w/ character %s about to attack. Has %s HP and %s AD", pokemon.name, pokemon.hp, pokemon.attackDamage);
 		console.log("Boss %s has %s HP and %s AD", bigBoss.name, bigBoss.hp, bigBoss.attackDamage);
 		require (pokemon.hp > 0, "Error: pokemon is out of HP");
@@ -219,17 +231,33 @@ contract MyEpicGame is ERC721 {
 
 		console.log("Player attacked boss. New boss hp: %s", bigBoss.hp);
   	console.log("Boss attacked player's pokemon. New pokemon hp: %s\n", pokemon.hp);
-		emit AttackComplete(bigBoss.hp, pokemon.hp);
+		emit AttackComplete(bigBoss.hp, pokemon.hp, _tokenId);
 	}
 
-	function checkIfUserHasNFT() public view returns (CharacterAttributes memory) {
-		uint256 tokenId = ownerToPokemonId[msg.sender];
-		if (tokenId > 0){
-			return pokemonAttributes[tokenId];
-		} else {
-			CharacterAttributes memory emptyStruct;
-			return emptyStruct;
+	function revivePokemon(uint256 _tokenId) public {
+		address owner = pokemonToOwner[_tokenId];
+		require(msg.sender == owner);
+		CharacterAttributes storage pokemon = pokemonAttributes[_tokenId];
+		require (pokemon.hp == 0, "Error: pokemon is out of HP");
+
+		pokemon.hp = pokemon.maxHp;
+
+		console.log("Player revived ", pokemon.name);
+		emit PokemonRevived(pokemon.hp, _tokenId);
+	}
+
+	function checkIfUserHasNFTs() public view returns (PokemonNFTAttributes[] memory) {
+		uint256[] memory tokenIds = ownerToPokemons[msg.sender];
+		PokemonNFTAttributes[] memory pokemon = new PokemonNFTAttributes[](tokenIds.length);
+		for(uint i = 0; i < tokenIds.length; i++) {
+			uint256 tokenId = tokenIds[i];
+			CharacterAttributes memory charAtr = pokemonAttributes[tokenId];
+			PokemonNFTAttributes memory pokemonNFTAttributes = PokemonNFTAttributes(charAtr.name, charAtr.imageURI,
+				charAtr.hp, charAtr.maxHp, charAtr.attackDamage, charAtr.defense, charAtr.moveName, charAtr.critChance, tokenId
+			);
+			pokemon[i] = pokemonNFTAttributes;
 		}
+		return pokemon;
 	}
 
 	function getAllDefaultCharacters() public view returns (CharacterAttributes[] memory) {
