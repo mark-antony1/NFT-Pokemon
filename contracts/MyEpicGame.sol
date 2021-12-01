@@ -15,8 +15,7 @@ import "./libraries/Base64.sol";
 
 // Our contract inherits from ERC721, which is the standard NFT contract!
 contract MyEpicGame is ERC721 {
-  // We'll hold our character's attributes in a struct. Feel free to add
-  // whatever you'd like as an attribute! (ex. defense, crit chance, etc).
+
   struct CharacterAttributes {
     uint characterIndex;
     string name;
@@ -69,12 +68,11 @@ contract MyEpicGame is ERC721 {
   using Counters for Counters.Counter;
   Counters.Counter private _tokenIds;
 
-  // A lil array to help us hold the default data for our characters.
-  // This will be helpful when we mint new characters and need to know
-  // things like their HP, AD, etc.
+  // A lil array to help us hold the default data for our pokemon.
+  // This will be helpful when we mint new characters and need to know the pokemon's stats
   CharacterAttributes[] defaultCharacters;
 
-	// We create a mapping from the nft's tokenId => that NFTs attributes.
+	// A mapping from the nft's tokenId => that NFTs attributes.
   mapping(uint256 => CharacterAttributes) public pokemonAttributes;
 
 	// A mapping from an the NFTs tokenId => address. I can retrieve an owner based on a pokemon ID.
@@ -101,7 +99,6 @@ contract MyEpicGame is ERC721 {
   )
 		ERC721("Pokemon", "POKEMON")
   {
-		// Initialize the boss. Save it to our global "bigBoss" state variable.
 		bigBoss = BigBoss({
 			name: bossData.name,
 			imageURI: bossData.imageURI,
