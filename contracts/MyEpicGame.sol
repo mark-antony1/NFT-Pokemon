@@ -275,17 +275,17 @@ contract MyEpicGame is ERC721, VRFConsumerBase {
 		emit AttackComplete(bigBoss.hp, pokemon.hp, _tokenId, _randomness <= pokemon.critChance);
 	}
 
-	// function revivePokemon(uint256 _tokenId) public {
-	// 	address owner = pokemonToOwner[_tokenId];
-	// 	require(msg.sender == owner);
-	// 	CharacterAttributes storage pokemon = pokemonAttributes[_tokenId];
-	// 	require (pokemon.hp == 0, "Error: pokemon is out of HP");
+	function revivePokemon(uint256 _tokenId) public {
+		address owner = pokemonToOwner[_tokenId];
+		require(msg.sender == owner);
+		CharacterAttributes storage pokemon = pokemonAttributes[_tokenId];
+		require (pokemon.hp == 0, "Error: pokemon is out of HP");
 
-	// 	pokemon.hp = pokemon.maxHp;
+		pokemon.hp = pokemon.maxHp;
 
-	// 	console.log("Player revived ", pokemon.name);
-	// 	emit PokemonRevived(pokemon.hp, _tokenId);
-	// }
+		console.log("Player revived ", pokemon.name);
+		emit PokemonRevived(pokemon.hp, _tokenId);
+	}
 
 	function checkIfUserHasNFTs() public view returns (PokemonNFTAttributes[] memory) {
 		uint256[] memory tokenIds = ownerToPokemons[msg.sender];
