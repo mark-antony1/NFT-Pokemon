@@ -90,7 +90,7 @@ contract MyEpicGame is ERC721, VRFConsumerBase {
 	bytes32 private keyHash;
 	uint256 private fee;
 
-	event AttackComplete(uint newBossHp, uint newPlayerHp, uint256 tokenId);
+	event AttackComplete(uint newBossHp, uint newPlayerHp, uint256 tokenId, bool isCriticalHit);
 	event CharacterNFTMinted(address sender, uint256 tokenId, uint256 characterIndex);
 	event PokemonRevived(uint256 tokenId, uint newPokemonHealth);
 
@@ -244,11 +244,20 @@ contract MyEpicGame is ERC721, VRFConsumerBase {
 		console.log("Boss %s has %s HP and %s AD", bigBoss.name, bigBoss.hp, bigBoss.attackDamage);
 		require (pokemon.hp > 0, "Error: pokemon is out of HP");
 		require (bigBoss.hp > 0, "Error: Mewtwo is out of HP");
-
-		if (bigBoss.hp < pokemon.attackDamage) {
-			bigBoss.hp = 0;
+		
+		//Decide if pokemon hit boss with critical effectiveness or not
+		if (_randomness <= pokemon.critChance) {
+			if (bigBoss.hp < (pokemon.attackDamage*2)) {
+				bigBoss.hp = 0;
+			} else {
+				bigBoss.hp = bigBoss.hp - (pokemon.attackDamage*2);
+			}
 		} else {
-			bigBoss.hp = bigBoss.hp - pokemon.attackDamage;
+			if (bigBoss.hp < pokemon.attackDamage) {
+				bigBoss.hp = 0;
+			} else {
+				bigBoss.hp = bigBoss.hp - pokemon.attackDamage;
+			}
 		}
 
 		if (pokemon.hp < bigBoss.attackDamage) {
@@ -263,7 +272,7 @@ contract MyEpicGame is ERC721, VRFConsumerBase {
 
 		console.log("Player attacked boss. New boss hp: %s", bigBoss.hp);
   	console.log("Boss attacked player's pokemon. New pokemon hp: %s\n", pokemon.hp);
-		emit AttackComplete(bigBoss.hp, pokemon.hp, _tokenId);
+		emit AttackComplete(bigBoss.hp, pokemon.hp, _tokenId, _randomness <= pokemon.critChance);
 	}
 
 	// function revivePokemon(uint256 _tokenId) public {

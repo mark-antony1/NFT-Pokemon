@@ -12,7 +12,7 @@ const main = async () => {
 		[63, 43, 30, 40],
 		[10, 20, 30, 20],
 		["Thunderbolt", "Flamethrower", "Hydro Pump", "Vine Whip"],
-		[40, 20, 10, 20],
+		[40, 20, 100, 20],
 		{
 			name: "Mewtwo",
 			imageURI: "https://img.pokemondb.net/artwork/large/mewtwo.jpg",
