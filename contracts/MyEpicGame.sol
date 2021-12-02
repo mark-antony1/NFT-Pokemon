@@ -189,8 +189,20 @@ contract MyEpicGame is ERC721, VRFConsumerBase {
 	function fulfillRandomness(bytes32 requestId, uint256 randomness) internal override {
 		uint256 d100Value = (randomness%100)+1;
     uint256 tokenId = requestToPokemon[requestId];
-		attackBossV2(tokenId, d100Value);
+		fufillAttackBoss(tokenId, d100Value);
 	}
+
+	function attackBoss(uint256 _tokenId) public returns (bytes32 requestId) {
+		address owner = pokemonToOwner[_tokenId];
+		require(msg.sender == owner);
+		// checking LINK balance
+		require(LINK.balanceOf(address(this)) >= fee, "Not enough LINK to pay fee");
+
+		// requesting randomness
+		requestId = requestRandomness(keyHash, fee);
+
+		requestToPokemon[requestId] = _tokenId;
+  }
 
 	function tokenURI(uint256 _tokenId) public view override returns (string memory) {
 		CharacterAttributes memory charAttributes = pokemonAttributes[_tokenId];
@@ -226,35 +238,7 @@ contract MyEpicGame is ERC721, VRFConsumerBase {
 		return output;
 	}
 
-	function attackBoss(uint256 _tokenId) public {
-		address owner = pokemonToOwner[_tokenId];
-		require(msg.sender == owner);
-		CharacterAttributes storage pokemon = pokemonAttributes[_tokenId];
-		console.log("\nPlayer w/ character %s about to attack. Has %s HP and %s AD", pokemon.name, pokemon.hp, pokemon.attackDamage);
-		console.log("Boss %s has %s HP and %s AD", bigBoss.name, bigBoss.hp, bigBoss.attackDamage);
-		require (pokemon.hp > 0, "Error: pokemon is out of HP");
-		require (bigBoss.hp > 0, "Error: Mewtwo is out of HP");
-
-		if (bigBoss.hp < pokemon.attackDamage) {
-			bigBoss.hp = 0;
-		} else {
-			bigBoss.hp = bigBoss.hp - pokemon.attackDamage;
-		}
-
-		if (pokemon.hp < bigBoss.attackDamage) {
-			pokemon.hp = 0;
-		} else {
-			pokemon.hp = pokemon.hp - bigBoss.attackDamage;
-		}
-
-		console.log("Player attacked boss. New boss hp: %s", bigBoss.hp);
-  	console.log("Boss attacked player's pokemon. New pokemon hp: %s\n", pokemon.hp);
-		emit AttackComplete(bigBoss.hp, pokemon.hp, _tokenId);
-	}
-
-		function attackBossV2(uint256 _tokenId, uint256 _randomness) public {
-		address owner = pokemonToOwner[_tokenId];
-		require(msg.sender == owner);
+	function fufillAttackBoss(uint256 _tokenId, uint256 _randomness) private {
 		CharacterAttributes storage pokemon = pokemonAttributes[_tokenId];
 		console.log("\nPlayer w/ character %s about to attack. Has %s HP and %s AD", pokemon.name, pokemon.hp, pokemon.attackDamage);
 		console.log("Boss %s has %s HP and %s AD", bigBoss.name, bigBoss.hp, bigBoss.attackDamage);
@@ -282,17 +266,17 @@ contract MyEpicGame is ERC721, VRFConsumerBase {
 		emit AttackComplete(bigBoss.hp, pokemon.hp, _tokenId);
 	}
 
-	function revivePokemon(uint256 _tokenId) public {
-		address owner = pokemonToOwner[_tokenId];
-		require(msg.sender == owner);
-		CharacterAttributes storage pokemon = pokemonAttributes[_tokenId];
-		require (pokemon.hp == 0, "Error: pokemon is out of HP");
+	// function revivePokemon(uint256 _tokenId) public {
+	// 	address owner = pokemonToOwner[_tokenId];
+	// 	require(msg.sender == owner);
+	// 	CharacterAttributes storage pokemon = pokemonAttributes[_tokenId];
+	// 	require (pokemon.hp == 0, "Error: pokemon is out of HP");
 
-		pokemon.hp = pokemon.maxHp;
+	// 	pokemon.hp = pokemon.maxHp;
 
-		console.log("Player revived ", pokemon.name);
-		emit PokemonRevived(pokemon.hp, _tokenId);
-	}
+	// 	console.log("Player revived ", pokemon.name);
+	// 	emit PokemonRevived(pokemon.hp, _tokenId);
+	// }
 
 	function checkIfUserHasNFTs() public view returns (PokemonNFTAttributes[] memory) {
 		uint256[] memory tokenIds = ownerToPokemons[msg.sender];
