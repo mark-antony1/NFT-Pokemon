@@ -9,8 +9,6 @@ import "@chainlink/contracts/src/v0.8/VRFConsumerBase.sol";
 import "@openzeppelin/contracts/utils/Counters.sol";
 import "@openzeppelin/contracts/utils/Strings.sol";
 
-import "hardhat/console.sol";
-
 // Helper we wrote to encode in Base64
 import "./libraries/Base64.sol";
 
@@ -123,8 +121,6 @@ contract MyEpicGame is ERC721, VRFConsumerBase {
 			critChance: bossData.critChance
 		});
 
-		console.log("Done initializing boss %s w/ HP %s, img %s", bigBoss.name, bigBoss.hp, bigBoss.imageURI);
-
 
     // Loop through all the characters, and save their values in our contract so
     // we can use them later when we mint our NFTs.
@@ -140,10 +136,6 @@ contract MyEpicGame is ERC721, VRFConsumerBase {
 				moveName: characterMoveName[i],
 				critChance: characterCritChance[i]
       }));
-
-      CharacterAttributes memory c = defaultCharacters[i];
-      console.log("Done initializing %s w/ HP %s, img %s", c.name, c.hp, c.imageURI);
-      console.log("and , move name %s, attack damage %s", c.moveName, c.attackDamage);
     }
 		// I increment tokenIds here so that my first NFT has an ID of 1.
 		_tokenIds.increment();
@@ -173,8 +165,6 @@ contract MyEpicGame is ERC721, VRFConsumerBase {
 			moveName: defaultCharacters[_characterIndex].moveName,
 			critChance: defaultCharacters[_characterIndex].critChance
     });
-
-    console.log("Minted NFT w/ tokenId %s and characterIndex %s", newItemId, _characterIndex);
     
     // Keep an easy way to see who owns what NFT.
     pokemonToOwner[newItemId] = msg.sender;
@@ -240,24 +230,19 @@ contract MyEpicGame is ERC721, VRFConsumerBase {
 
 	function fufillAttackBoss(uint256 _tokenId, uint256 _randomness) private {
 		CharacterAttributes storage pokemon = pokemonAttributes[_tokenId];
-		console.log("\nPlayer w/ character %s about to attack. Has %s HP and %s AD", pokemon.name, pokemon.hp, pokemon.attackDamage);
-		console.log("Boss %s has %s HP and %s AD", bigBoss.name, bigBoss.hp, bigBoss.attackDamage);
 		require (pokemon.hp > 0, "Error: pokemon is out of HP");
 		require (bigBoss.hp > 0, "Error: Mewtwo is out of HP");
 		
 		//Decide if pokemon hit boss with critical effectiveness or not
+		uint256 pokemonAttackDamage = pokemon.attackDamage;
 		if (_randomness <= pokemon.critChance) {
-			if (bigBoss.hp < (pokemon.attackDamage*2)) {
-				bigBoss.hp = 0;
-			} else {
-				bigBoss.hp = bigBoss.hp - (pokemon.attackDamage*2);
-			}
+			pokemonAttackDamage *= 2;
+		}
+
+		if (bigBoss.hp < pokemonAttackDamage) {
+			bigBoss.hp = 0;
 		} else {
-			if (bigBoss.hp < pokemon.attackDamage) {
-				bigBoss.hp = 0;
-			} else {
-				bigBoss.hp = bigBoss.hp - pokemon.attackDamage;
-			}
+			bigBoss.hp = bigBoss.hp - pokemonAttackDamage;
 		}
 
 		if (pokemon.hp < bigBoss.attackDamage) {
@@ -266,12 +251,6 @@ contract MyEpicGame is ERC721, VRFConsumerBase {
 			pokemon.hp = pokemon.hp - bigBoss.attackDamage;
 		}
 
-		if (_randomness <= pokemon.critChance) {
-			console.log("CRITICAL HIT for ", pokemon.name, " for",  pokemon.attackDamage);
-		}
-
-		console.log("Player attacked boss. New boss hp: %s", bigBoss.hp);
-  	console.log("Boss attacked player's pokemon. New pokemon hp: %s\n", pokemon.hp);
 		emit AttackComplete(bigBoss.hp, pokemon.hp, _tokenId, _randomness <= pokemon.critChance);
 	}
 
@@ -282,8 +261,6 @@ contract MyEpicGame is ERC721, VRFConsumerBase {
 		require (pokemon.hp == 0, "Error: pokemon is out of HP");
 
 		pokemon.hp = pokemon.maxHp;
-
-		console.log("Player revived ", pokemon.name);
 		emit PokemonRevived(pokemon.hp, _tokenId);
 	}
 
