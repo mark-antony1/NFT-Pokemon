@@ -1,4 +1,10 @@
-# Basic Sample Hardhat Project
+# THIS IS THE CONTRACT CODE FOR A NFT PROJECT DEPLOYED ON RINKEBY TESTNET
+
+The project allows users to mint NFTs(pokemon) and use them to attack a boss(Mewtwo).
+
+Users can mint multiple pokemon for their team.
+
+Critical hits are implemented with Chainlink Oracles
 
 This project demonstrates a basic Hardhat use case. It comes with a sample contract, a test for that contract, a sample script that deploys that contract, and an example of a task implementation, which simply lists the available accounts.
 
