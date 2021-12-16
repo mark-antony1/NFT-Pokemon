@@ -1,4 +1,6 @@
-# THIS IS THE CONTRACT CODE FOR A NFT PROJECT DEPLOYED ON RINKEBY TESTNET
+# NFT Pokemon
+
+This is the solidity contract code for a project deployed on rinkeby testnet
 
 The project allows users to mint NFTs(pokemon) and use them to attack a boss(Mewtwo).
 
